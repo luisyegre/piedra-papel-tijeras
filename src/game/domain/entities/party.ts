@@ -1,0 +1,61 @@
+import { Player } from './player';
+import { Round, RoundResult } from './round';
+
+export abstract class Party {
+  private players: Player[] = [];
+  private playing: boolean = false;
+  protected playedRounds: Round[] = [];
+  constructor(
+    private readonly id: string,
+    private readonly code: string,
+    protected maxRounds: number,
+  ) {}
+  join(player: Player): void {
+    if (this.playing) {
+      throw new Error('Game is already started');
+    }
+    if (this.players.find((p) => p.getUsername() === player.getUsername())) {
+      throw new Error('Player with this username already exists');
+    }
+    this.players.push(player);
+  }
+  leave(player: Player): void {
+    this.players = this.players.filter((p) => p !== player);
+  }
+  start(): void {
+    if (this.playing) {
+      throw new Error('Game is already started');
+    }
+    if (this.players.length < 2) {
+      throw new Error('Not enough players to start the game');
+    }
+    if (this.players.some((player) => !player.isReady)) {
+      throw new Error('Not all players are ready');
+    }
+    this.playing = true;
+  }
+  isPlaying(): boolean {
+    return this.playing;
+  }
+  abstract playRound(choices: Round): RoundResult;
+  abstract getWinner(): Player | null;
+}
+
+export class EliminationParty extends Party {
+  getWinner(): Player | null {
+    const winners =
+      this.playedRounds[this.playedRounds.length - 1]?.result().winners;
+    return winners.length === 1 ? winners[0] : null;
+  }
+  playRound(round: Round): RoundResult {
+    if (!this.isPlaying()) {
+      throw new Error('Game is not started');
+    }
+    if (this.getWinner() !== null) {
+      throw new Error('Game have a winner');
+    }
+    const result = round.result();
+    this.playedRounds.push(round);
+    return result;
+  }
+}
