@@ -7,10 +7,11 @@ export abstract class Party {
   protected playedRounds: Round[] = [];
   constructor(
     private readonly id: string,
+    private master: Player,
     private readonly code: string,
-    protected maxRounds: number,
+    // protected maxRounds: number,
   ) {}
-  join(player: Player): void {
+  add(player: Player): void {
     if (this.playing) {
       throw new Error('Game is already started');
     }
@@ -19,8 +20,8 @@ export abstract class Party {
     }
     this.players.push(player);
   }
-  leave(player: Player): void {
-    this.players = this.players.filter((p) => p !== player);
+  remove(player: Player): void {
+    this.players = this.players.filter((p) => p.id !== player.id);
   }
   start(): void {
     if (this.playing) {
