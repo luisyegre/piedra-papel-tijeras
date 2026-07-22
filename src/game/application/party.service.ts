@@ -44,6 +44,16 @@ export class PartyService {
     await this.partyRepository.save(party);
     return party;
   }
+  async getPartyResumen(partyCode: string) {
+    const party = await this.partyRepository.findByCode(partyCode);
+    if (party === null) {
+      throw new Error('Party not found');
+    }
+    return {
+      id: party.id,
+      players: party.getPlayers(),
+    };
+  }
   private generatePartyCode(): string {
     return `${Math.floor(Math.random() * 10000)
       .toString()

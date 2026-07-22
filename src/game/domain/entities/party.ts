@@ -6,7 +6,7 @@ export abstract class Party {
   private playing: boolean = false;
   protected playedRounds: Round[] = [];
   constructor(
-    private readonly id: string,
+    readonly id: string,
     private master: Player,
     private readonly code: string,
     // protected maxRounds: number,
@@ -37,6 +37,9 @@ export abstract class Party {
   }
   isPlaying(): boolean {
     return this.playing;
+  }
+  getPlayers() {
+    return this.players;
   }
   abstract playRound(choices: Round): RoundResult;
   abstract getWinner(): Player | null;
