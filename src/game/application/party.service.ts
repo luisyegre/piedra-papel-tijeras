@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Player } from '../domain/entities/player';
 import type { PartyRepository } from '../domain/repositories/party.repository';
 import type { PlayerRepository } from '../domain/repositories/player.repository';
 import { EliminationParty, Party } from '../domain/entities/party';
+import { PLAYER_REPOSITORY, PARTY_REPOSITORY } from '../domain/repositories/tokens';
 
 @Injectable()
 export class PartyService {
   constructor(
+    @Inject('PLAYER_REPOSITORY')
     private playerRepository: PlayerRepository,
+    @Inject('PARTY_REPOSITORY')
     private partyRepository: PartyRepository,
   ) {}
   async removeUserFromParty(userId: string, partyCode: string) {

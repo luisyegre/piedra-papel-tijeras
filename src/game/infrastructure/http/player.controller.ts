@@ -1,5 +1,5 @@
-import { Body, Controller, Post } from "@nestjs/common";
-import { UserService } from "src/game/application/user.service";
+import { Body, Controller, Post } from '@nestjs/common';
+import { UserService } from 'src/game/application/user.service';
 
 @Controller('user')
 export class UserController {
