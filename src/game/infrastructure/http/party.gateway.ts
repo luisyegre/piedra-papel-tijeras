@@ -34,4 +34,28 @@ export class PartyGateway {
     const resumen = await this.partyService.getPartyResumen(partyCode);
     return resumen;
   }
+
+  //game
+
+  @SubscribeMessage('start')
+  async startGame(
+    client: Socket,
+    @MessageBody('partyData')
+    partyData: {
+      masterId: string;
+      partyCode: string;
+    },
+  ) {
+    await this.partyService.startGame(partyData.masterId, partyData.partyCode);
+    client.emit('game.started', { ok: true });
+  }
+
+  @SubscribeMessage('sendChoice')
+  async playRound(
+    client: Socket,
+    @MessageBody('partyData') partyData: { partyCode: string; userId: string },
+  ) {
+    await this.roundService.play(roundId, userId, choice);
+    client.emit('round.played', { ok: true });
+  }
 }

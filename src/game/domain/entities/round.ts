@@ -10,6 +10,7 @@ export class RoundResult {
 
 export class Round {
   private choices: Choose[] = [];
+  constructor(readonly id: string) {}
   play(choose: Choose): void {
     this.choices.push(choose);
   }

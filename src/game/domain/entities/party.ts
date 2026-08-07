@@ -41,6 +41,9 @@ export abstract class Party {
   getPlayers() {
     return this.players;
   }
+  getMaster(): Player {
+    return this.master;
+  }
   abstract playRound(choices: Round): RoundResult;
   abstract getWinner(): Player | null;
 }

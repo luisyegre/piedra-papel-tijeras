@@ -3,14 +3,14 @@ import { Player } from '../domain/entities/player';
 import type { PartyRepository } from '../domain/repositories/party.repository';
 import type { PlayerRepository } from '../domain/repositories/player.repository';
 import { EliminationParty, Party } from '../domain/entities/party';
-import { PLAYER_REPOSITORY, PARTY_REPOSITORY } from '../domain/repositories/tokens';
+import { PARTY_REPOSITORY, PLAYER_REPOSITORY } from '../domain/tokens';
 
 @Injectable()
 export class PartyService {
   constructor(
-    @Inject('PLAYER_REPOSITORY')
+    @Inject(PLAYER_REPOSITORY)
     private playerRepository: PlayerRepository,
-    @Inject('PARTY_REPOSITORY')
+    @Inject(PARTY_REPOSITORY)
     private partyRepository: PartyRepository,
   ) {}
   async removeUserFromParty(userId: string, partyCode: string) {
@@ -63,5 +63,17 @@ export class PartyService {
       .padStart(4, '0')}-${Math.floor(Math.random() * 10000)
       .toString()
       .padStart(4, '0')}`;
+  }
+  async startGame(masterId: string, partyCode: string) {
+    const party = await this.partyRepository.findByCode(partyCode);
+    if (party === null) {
+      throw new Error('Party not found');
+    }
+    const partyMaster = party.getMaster();
+    if (partyMaster.id !== masterId) {
+      throw new Error('Only the master can start the game');
+    }
+    party.start();
+    await this.partyRepository.save(party);
   }
 }
