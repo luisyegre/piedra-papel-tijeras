@@ -1,6 +1,7 @@
 export class Player {
-  private status: 'READY' | 'NOT_READY' = 'NOT_READY';
+  private partyStatus: 'READY' | 'NOT_READY' = 'NOT_READY';
   private score: number = 0;
+  private gameStatus: 'LOOSE' | 'PLAYING' | 'CHOOSING' = 'CHOOSING';
   constructor(
     readonly id: string,
     private readonly username: string,
@@ -12,12 +13,30 @@ export class Player {
     return this.username;
   }
   ready(): void {
-    this.status = 'READY';
+    this.partyStatus = 'READY';
   }
   notReady(): void {
-    this.status = 'NOT_READY';
+    this.partyStatus = 'NOT_READY';
   }
-  get isReady(): boolean {
-    return this.status === 'READY';
+  loose(): void {
+    this.gameStatus = 'LOOSE';
+  }
+  play(): void {
+    this.gameStatus = 'PLAYING';
+  }
+  choosing(): void {
+    this.gameStatus = 'CHOOSING';
+  }
+  isReady(): boolean {
+    return this.partyStatus === 'READY';
+  }
+  isLoose(): boolean {
+    return this.gameStatus === 'LOOSE';
+  }
+  isPlaying(): boolean {
+    return this.gameStatus === 'PLAYING';
+  }
+  isChoosing(): boolean {
+    return this.gameStatus === 'CHOOSING';
   }
 }

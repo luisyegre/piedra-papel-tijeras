@@ -14,4 +14,11 @@ export class UserService {
     await this.playerRepository.save(player);
     return player;
   }
+  async getPlayerByUsername(username: string): Promise<Player> {
+    const player = await this.playerRepository.findByUsername(username);
+    if (!player) {
+      throw new Error('Player not found');
+    }
+    return player;
+  }
 }

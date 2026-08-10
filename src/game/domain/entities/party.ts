@@ -61,6 +61,11 @@ export class EliminationParty extends Party {
     if (this.getWinner() !== null) {
       throw new Error('Game have a winner');
     }
+    for (const player of this.getPlayers()) {
+      if (player.isChoosing()) {
+        throw new Error('Not all players have played');
+      }
+    }
     const result = round.result();
     this.playedRounds.push(round);
     return result;
