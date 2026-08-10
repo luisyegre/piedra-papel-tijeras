@@ -16,7 +16,7 @@ export class UserService {
   }
   async getPlayerByUsername(username: string): Promise<Player> {
     const player = await this.playerRepository.findByUsername(username);
-    if (!player) {
+    if (player === null) {
       throw new Error('Player not found');
     }
     return player;

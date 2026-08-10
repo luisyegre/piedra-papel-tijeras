@@ -11,6 +11,7 @@ export class PartyController {
   ) {}
   @Post('create')
   async create(@Body() createPartyDto: CreatePartyDto) {
+    // const player = this.userService.getPlayerByUsername(createPartyDto.masterUsername);
     const master = await this.userService.createPlayer(
       createPartyDto.masterUsername,
     );

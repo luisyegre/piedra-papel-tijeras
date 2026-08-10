@@ -14,9 +14,12 @@ export class PartyService {
     @Inject(PARTY_REPOSITORY)
     private partyRepository: PartyRepository,
   ) {}
-  async removeUserFromParty(userId: string, partyCode: string) {
+  async removeUserFromParty(username: string, partyCode: string) {
     const party = await this.getPartyByCode(partyCode);
-    const player = await this.getPlayerById(userId);
+    const player = await this.playerRepository.findByUsername(username);
+    if (!player) {
+      throw new Error('Player not found');
+    }
     party.remove(player);
     await this.partyRepository.save(party);
   }
@@ -56,10 +59,10 @@ export class PartyService {
     await this.partyRepository.delete(party);
     //despues de 10 minutos borrar todos los usuarios de la party.
   }
-  async verifyMaster(masterId: string, partyCode: string): Promise<void> {
+  async verifyMaster(username: string, partyCode: string): Promise<void> {
     const party = await this.getPartyByCode(partyCode);
     const partyMaster = party.getMaster();
-    if (partyMaster.id !== masterId) {
+    if (partyMaster.getUsername() !== username) {
       throw new Error('Only the master can perform this action');
     }
   }

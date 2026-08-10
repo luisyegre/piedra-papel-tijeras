@@ -1,7 +1,9 @@
 import {
+  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
+  WsException,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { PartyService } from 'src/game/application/party.service';
@@ -17,25 +19,32 @@ export class PartyGateway {
     private playerService: UserService,
   ) {}
   async handleConnection(client: Socket) {
-    const partyCode = client.handshake.query.partyCode as string;
-    const username = client.handshake.query.username as string;
+    //verificar token de sesion
+  }
+  @SubscribeMessage('join')
+  async join(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    { partyCode, username }: { partyCode: string; username: string },
+  ) {
     if (!partyCode || !username) {
-      client.disconnect();
-      return;
+      client.emit('error', {
+        message: 'Faltan parámetros requeridos (partyCode o username)',
+      });
     }
     try {
       const player = await this.playerService.getPlayerByUsername(username);
       await this.partyService.addUserToParty(player, partyCode);
       await client.join(partyCode);
     } catch (error) {
-      client.emit('error', { message: (error as Error).message });
-      client.disconnect();
+      throw new WsException((error as Error).message);
+      // client.emit('error', { message: (error as Error).message });
     }
   }
   @UseGuards(WsRequiredBeMasterGuard)
   @SubscribeMessage('close')
   async closeParty(
-    client: Socket,
+    @ConnectedSocket() client: Socket,
     @MessageBody('partyCode') partyCode: string,
   ) {
     await this.partyService.closeParty(partyCode);
@@ -46,23 +55,23 @@ export class PartyGateway {
   @UseGuards(WsRequiredBeMasterGuard)
   @SubscribeMessage('kickOut')
   async kickOutUser(
-    client: Socket,
-    @MessageBody('data')
-    data: { partyCode: string; userId: string },
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { partyCode: string; target: string },
   ) {
-    await this.partyService.removeUserFromParty(data.userId, data.partyCode);
+    await this.partyService.removeUserFromParty(data.target, data.partyCode);
     client.emit('user.kickedOut', { ok: true });
   }
   @SubscribeMessage('leave')
   async leaveParty(
-    client: Socket,
-    @MessageBody() data: { partyCode: string; userId: string },
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { partyCode: string; username: string },
   ): Promise<void> {
-    await this.partyService.removeUserFromParty(data.userId, data.partyCode);
+    await this.partyService.removeUserFromParty(data.username, data.partyCode);
     await client.leave(data.partyCode);
   }
   @SubscribeMessage('resumen')
-  async sendResumen(@MessageBody('partyCode') partyCode: string) {
+  async sendResumen(@MessageBody() partyCode: string) {
     const resumen = await this.partyService.getPartyResumen(partyCode);
     return resumen;
   }
@@ -71,20 +80,17 @@ export class PartyGateway {
   @UseGuards(WsRequiredBeMasterGuard)
   @SubscribeMessage('start')
   async startGame(
-    client: Socket,
-    @MessageBody('partyData')
-    partyData: {
-      partyCode: string;
-    },
+    @ConnectedSocket() client: Socket,
+    @MessageBody('partyCode') partyCode: string,
   ) {
-    await this.partyService.startGame(partyData.partyCode);
+    await this.partyService.startGame(partyCode);
     client.emit('game.started', { ok: true });
   }
 
   @SubscribeMessage('sendChoice')
   async playRound(
-    client: Socket,
-    @MessageBody('roundData')
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
     roundData: {
       partyId: string;
       roundId: string;

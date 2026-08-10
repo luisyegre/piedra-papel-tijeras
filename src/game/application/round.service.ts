@@ -1,8 +1,8 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 import { Round } from '../domain/entities/round';
 import { PLAYER_REPOSITORY } from '../domain/tokens';
 import { type PlayerRepository } from '../domain/repositories/player.repository';
-import { Choose } from "../domain/entities/choose";
+import { Choose } from '../domain/entities/choose';
 
 @Injectable()
 export class RoundService {
