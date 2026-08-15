@@ -1,0 +1,1 @@
+export const PARTY_REPOSITORY = 'PARTY_REPOSITORY';
