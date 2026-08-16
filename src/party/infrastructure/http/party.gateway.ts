@@ -3,20 +3,22 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
 import { PartyService } from '../../application/party.service';
 import { RoundService } from '../../application/round.service';
-import { PlayerService } from '../../../player/application/player.service';
 import { WsRequiredBeMasterGuard } from './guards/ws-required-be-master.guard';
 import { UseGuards } from '@nestjs/common';
 import type { AuthenticatedSocket } from './authenticated-socket';
-@WebSocketGateway({ namespace: 'party' })
+import { Namespace } from 'socket.io';
+@WebSocketGateway({ namespace: 'party', cors: true })
 export class PartyGateway {
+  @WebSocketServer()
+  private namespace: Namespace;
   constructor(
     private partyService: PartyService,
     private roundService: RoundService,
-    private playerService: PlayerService,
   ) {}
   async handleConnection(client: AuthenticatedSocket) {
     const { partyCode, username } = client.handshake.query;
@@ -36,6 +38,9 @@ export class PartyGateway {
       client.data.partyCode = partyCode as string;
       client.data.username = username as string;
       await client.join(client.data.partyCode);
+      this.namespace
+        .to(client.data.partyCode)
+        .emit('player.join', { username: client.data.username });
     } catch (error) {
       client.emit('error', { message: (error as Error).message });
       client.disconnect();
@@ -45,8 +50,9 @@ export class PartyGateway {
   @SubscribeMessage('close')
   async closeParty(@ConnectedSocket() client: AuthenticatedSocket) {
     await this.partyService.closeParty(client.data.partyCode);
-    client.emit('party.closed', { ok: true });
-    await client.leave(client.data.partyCode);
+    console.log('closing...');
+    client.to(client.data.partyCode).emit('party.closed', { ok: true });
+    client.disconnect();
   }
 
   @UseGuards(WsRequiredBeMasterGuard)
@@ -59,7 +65,10 @@ export class PartyGateway {
       data.target,
       client.data.partyCode,
     );
-    client.emit('user.kickedOut', { ok: true });
+    console.log('kicking out...');
+    client
+      .to(client.data.partyCode)
+      .emit('user.kickedOut', { username: data.target });
   }
   @SubscribeMessage('leave')
   async leaveParty(@ConnectedSocket() client: AuthenticatedSocket) {
@@ -67,7 +76,11 @@ export class PartyGateway {
       client.data.username,
       client.data.partyCode,
     );
-    await client.leave(client.data.partyCode);
+    console.log('leaving');
+    client
+      .to(client.data.partyCode)
+      .emit('player.leave', { username: client.data.username });
+    client.disconnect();
   }
   @SubscribeMessage('resumen')
   async sendResumen(@ConnectedSocket() client: AuthenticatedSocket) {
@@ -82,7 +95,7 @@ export class PartyGateway {
   @SubscribeMessage('start')
   async startGame(@ConnectedSocket() client: AuthenticatedSocket) {
     await this.partyService.startGame(client.data.partyCode);
-    client.emit('game.started', { ok: true });
+    return { ok: true };
   }
 
   @SubscribeMessage('sendChoice')
@@ -101,6 +114,6 @@ export class PartyGateway {
       roundData.choice,
     );
     await this.partyService.playRound(client.data.partyCode, round);
-    client.emit('round.played', { ok: true });
+    client.to(client.data.partyCode).emit('round.played', { ok: true });
   }
 }

@@ -6,6 +6,7 @@ import { EliminationParty, Party } from '../domain/entities/party';
 import { PARTY_REPOSITORY } from '../domain/tokens';
 import { PLAYER_REPOSITORY } from '../../player/domain/tokens';
 import { Round } from '../domain/entities/round';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class PartyService {
@@ -43,13 +44,18 @@ export class PartyService {
     const party = await this.getPartyByCode(partyCode);
     return {
       id: party.id,
+      master: party.getMaster(),
       players: party.getPlayers(),
     };
   }
   async startGame(partyCode: string) {
-    const party = await this.getPartyByCode(partyCode);
-    party.start();
-    await this.partyRepository.save(party);
+    try {
+      const party = await this.getPartyByCode(partyCode);
+      party.start();
+      await this.partyRepository.save(party);
+    } catch (error) {
+      throw new WsException((error as Error).message);
+    }
   }
   async playRound(partyCode: string, round: Round): Promise<void> {
     const party = await this.getPartyByCode(partyCode);
