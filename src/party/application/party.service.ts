@@ -31,13 +31,15 @@ export class PartyService {
     await this.partyRepository.save(party);
   }
   async createParty(masterId: string): Promise<Party> {
-    const master = await this.getPlayerById(masterId);
+    const creator = await this.getPlayerById(masterId);
     const party = new EliminationParty(
       crypto.randomUUID(),
-      master,
       this.generatePartyCode(),
     );
+    party.setMaster(creator);
+    creator.becomeMaster();
     await this.partyRepository.save(party);
+    await this.playerRepository.save(creator);
     return party;
   }
   async getPartyResumen(partyCode: string) {

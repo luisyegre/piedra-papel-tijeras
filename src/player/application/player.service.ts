@@ -33,6 +33,11 @@ export class PlayerService {
     }
     return player;
   }
+  async setPlayerReady(username: string) {
+    const player = await this.getPlayerByUsername(username);
+    player.status.ready();
+    this.playerRepository.save(player);
+  }
   async validateCredentials(
     username: string,
     password: string,

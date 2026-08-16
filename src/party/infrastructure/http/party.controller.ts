@@ -8,12 +8,12 @@ import { AuthUser } from 'src/auth/auth.interface';
 export class PartyController {
   constructor(
     private partyService: PartyService,
-    private userService: PlayerService,
+    private playerService: PlayerService,
   ) {}
   @UseGuards(AuthGuard)
   @Post('create')
   async create(@Req() { user }: Request & { user: AuthUser }) {
-    const player = await this.userService.getPlayerByUsername(user.username);
+    const player = await this.playerService.getPlayerByUsername(user.username);
     return this.partyService.createParty(player.id);
   }
   @UseGuards(AuthGuard)
@@ -22,7 +22,7 @@ export class PartyController {
     @Req() { user }: Request & { user: AuthUser },
     @Param('partyCode') partyCode: string,
   ) {
-    const player = await this.userService.getPlayerByUsername(user.username);
+    const player = await this.playerService.getPlayerByUsername(user.username);
     await this.partyService.addUserToParty(player, partyCode);
   }
 }

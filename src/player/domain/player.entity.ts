@@ -8,6 +8,7 @@ export class Player {
     readonly id: string,
     readonly username: string,
     private readonly password: string,
+    private _isMaster: boolean = false,
   ) {}
 
   getScore() {
@@ -15,6 +16,12 @@ export class Player {
   }
   getUsername(): string {
     return this.username;
+  }
+  get isMaster() {
+    return this._isMaster;
+  }
+  becomeMaster() {
+    this._isMaster = true;
   }
   verifyPassword(password: string) {
     if (this.password !== password) {

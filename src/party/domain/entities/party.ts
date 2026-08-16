@@ -7,7 +7,6 @@ export abstract class Party {
   protected playedRounds: Round[] = [];
   constructor(
     readonly id: string,
-    private master: Player,
     private readonly code: string,
     // protected maxRounds: number,
   ) {}
@@ -30,7 +29,11 @@ export abstract class Party {
     if (this.players.length < 2) {
       throw new Error('Not enough players to start the game');
     }
-    if (this.players.some((player) => !player.status.isReady())) {
+    if (
+      this.players.some(
+        (player) => !player.isMaster && !player.status.isReady(),
+      )
+    ) {
       throw new Error('Not all players are ready');
     }
     this.playing = true;
@@ -42,7 +45,12 @@ export abstract class Party {
     return this.players;
   }
   getMaster(): Player {
-    return this.master;
+    const master = this.players.find((p) => p.isMaster);
+    if (master === undefined) throw new Error('Party have not a master');
+    return master;
+  }
+  setMaster(player: Player) {
+    this.add(player);
   }
   abstract playRound(choices: Round): RoundResult;
   abstract getWinner(): Player | null;

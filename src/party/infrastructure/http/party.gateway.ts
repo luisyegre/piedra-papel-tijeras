@@ -12,12 +12,14 @@ import { WsRequiredBeMasterGuard } from './guards/ws-required-be-master.guard';
 import { UseGuards } from '@nestjs/common';
 import type { AuthenticatedSocket } from './authenticated-socket';
 import { Namespace } from 'socket.io';
+import { PlayerService } from 'src/player/application/player.service';
 @WebSocketGateway({ namespace: 'party', cors: true })
 export class PartyGateway {
   @WebSocketServer()
   private namespace: Namespace;
   constructor(
     private partyService: PartyService,
+    private playerService: PlayerService,
     private roundService: RoundService,
   ) {}
   async handleConnection(client: AuthenticatedSocket) {
@@ -65,7 +67,6 @@ export class PartyGateway {
       data.target,
       client.data.partyCode,
     );
-    console.log('kicking out...');
     client
       .to(client.data.partyCode)
       .emit('user.kickedOut', { username: data.target });
@@ -81,6 +82,13 @@ export class PartyGateway {
       .to(client.data.partyCode)
       .emit('player.leave', { username: client.data.username });
     client.disconnect();
+  }
+  @SubscribeMessage('ready')
+  async setReady(@ConnectedSocket() client: AuthenticatedSocket) {
+    await this.playerService.setPlayerReady(client.data.username);
+    client
+      .in(client.data.partyCode)
+      .emit('player.ready', { username: client.data.username });
   }
   @SubscribeMessage('resumen')
   async sendResumen(@ConnectedSocket() client: AuthenticatedSocket) {
